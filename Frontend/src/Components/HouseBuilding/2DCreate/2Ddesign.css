@@ -1,0 +1,38 @@
+Assign.css
+
+
+
+.assign-container {
+    padding: 20px;
+  }
+  
+  .total-house-area-input,
+  .facing-direction-selector,
+  .add-room-buttons {
+    margin-bottom: 20px;
+  }
+  
+  .room-selector {
+    margin-bottom: 20px;
+  }
+  
+  .total-area {
+    margin-bottom: 20px;
+  }
+  
+  .views-container {
+    display: flex;
+    gap: 20px;
+  }
+  
+  /* .view-2d-3d {
+    display: flex;
+    gap: 100px;
+  } */
+  
+  .view-2d,
+  .view-3d {
+    flex: 1;
+    border: 1px solid #ddd;
+    padding: 10px;
+  }

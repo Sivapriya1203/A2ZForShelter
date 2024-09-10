@@ -1,0 +1,36 @@
+
+.room2d-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+}
+
+.room-2d {
+  position: absolute;
+  background-color: rgba(173, 216, 230, 0.8); /* Light Blue */
+  border-style: solid;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: black;
+}
+
+.facing-north .room-2d {
+  transform: rotate(0deg);
+}
+
+.facing-east .room-2d {
+  transform: rotate(90deg);
+}
+
+.facing-south .room-2d {
+  transform: rotate(180deg);
+}
+
+.facing-west .room-2d {
+  transform: rotate(-90deg);
+}
