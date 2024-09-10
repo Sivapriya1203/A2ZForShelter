@@ -79,7 +79,7 @@ exports.login = async (req, res) => {
 
 exports.validateToken = (req, res) => {
   console.log("checkTOken");
-  const token = req.headers['authorization']?.split(' ')[1];
+  const token = req.body.token;
 
   if (!token) {
     return res.status(400).json({ valid: false, message: 'Token is missing' });
