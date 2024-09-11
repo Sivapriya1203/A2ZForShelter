@@ -1,7 +1,7 @@
 // ==============================|| THEME CONFIG  ||============================== //
 
 const config = {
-  apiURL: `http://localhost:2002`,
+  apiURL: `https://a2zbackend.asgglobalcrm.in`,
 
 };
 

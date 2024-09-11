@@ -1,9 +1,9 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import Room from "./Room";
-// import wallTexture from "./3dModels/Bricks092_2K-JPG/Bricks092_2K-JPG_Color.jpg";
-// import doorTexture from "./3dModels/Door001_4K-JPG/Door001.png";
-// import floorTexture from "./3dModels/Tatami004_2K-JPG/Tatami004_2K-JPG_Displacement.jpg";
+import wallTexture from "./3dModels/Bricks092_2K-JPG/Bricks092_2K-JPG_Color.jpg";
+import doorTexture from "./3dModels/Door001_4K-JPG/Door001.png";
+import floorTexture from "./3dModels/Tatami004_2K-JPG/Tatami004_2K-JPG_Displacement.jpg";
 import "./House2D.css";
 
 const House2D = ({ landWidth, landLength, rooms }) => {
