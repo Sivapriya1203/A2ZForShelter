@@ -1,36 +1,32 @@
+/* Room2D.css */
 
-.room2d-container {
+
+ .house-container {
   position: relative;
-  width: 100%;
-  height: 400px;
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
+  background-color: #f4f4f4;
+  border: 2px solid #000;
 }
 
-.room-2d {
+.room {
+  background-color: #e0e0e0;
   position: absolute;
-  background-color: rgba(173, 216, 230, 0.8); /* Light Blue */
-  border-style: solid;
-  text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.room-info {
   font-size: 0.8rem;
-  color: black;
+  line-height: 1.2rem;
+  color: #333;
+  z-index: 1;
 }
 
-.facing-north .room-2d {
-  transform: rotate(0deg);
-}
-
-.facing-east .room-2d {
-  transform: rotate(90deg);
-}
-
-.facing-south .room-2d {
-  transform: rotate(180deg);
-}
-
-.facing-west .room-2d {
-  transform: rotate(-90deg);
+.door {
+  background-color: brown;
+  border: 1px solid black;
+  box-sizing: border-box;
+  z-index: 2; /* Ensures that doors appear above the room background */
 }

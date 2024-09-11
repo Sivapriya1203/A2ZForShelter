@@ -1,38 +1,80 @@
-Assign.css
+/* Assign.Css */
 
 
 
-.assign-container {
+  .assign-container {
     padding: 20px;
+    font-family: Arial, sans-serif;
   }
   
-  .total-house-area-input,
-  .facing-direction-selector,
-  .add-room-buttons {
+  .input-group, .button-group, .door-section {
     margin-bottom: 20px;
+  }
+  
+  .input-group label, .door-section label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .input-group input, .door-section input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .button-group button, .remove-room-button, .door-section button {
+    padding: 10px;
+    margin-right: 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .button-group button:hover, .remove-room-button:hover, .door-section button:hover {
+    background-color: #0056b3;
   }
   
   .room-selector {
-    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .room-input {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin: 10px;
+    border-radius: 5px;
+    width: 220px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+  }
+  
+  .room-input.selected {
+    border-color: #007bff;
+    background-color: #e6f0ff;
+  }
+  
+  .room-area {
+    margin-top: 10px;
+    font-weight: bold;
+  }
+  
+  .error {
+    color: red;
+    font-weight: bold;
   }
   
   .total-area {
-    margin-bottom: 20px;
+    margin-top: 20px;
+    font-size: 18px;
   }
   
-  .views-container {
+  .view-2d-3d {
     display: flex;
-    gap: 20px;
+    justify-content: space-between;
   }
   
-  /* .view-2d-3d {
-    display: flex;
-    gap: 100px;
-  } */
-  
-  .view-2d,
-  .view-3d {
-    flex: 1;
-    border: 1px solid #ddd;
-    padding: 10px;
+  .view-2d {
+    width: 100%;
   }

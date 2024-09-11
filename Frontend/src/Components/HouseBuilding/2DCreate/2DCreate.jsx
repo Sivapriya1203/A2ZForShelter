@@ -1,82 +1,72 @@
 import React, { useState, useEffect } from "react";
 import Room2D from "./2DView";
-// import Room3D from './Room3D';
+
 import "./2Ddesign.css";
 
 function Create2D() {
   const [totalHouseArea, setTotalHouseArea] = useState(1200); // Example value
+  const [houseWidth, setHouseWidth] = useState(40); // House width in rem
+  const [houseHeight, setHouseHeight] = useState(30); // House height in rem
   const [rooms, setRooms] = useState([
+    {
+      id: 4,
+      name: "ktn",
+      width: 5,
+      height: 7,
+      left: 0,
+      top: 0,
+      wallThickness: 0.2,
+      doors: [],
+    },
     {
       id: 1,
       name: "bedroom",
-      width: 12.6,
-      height: 12,
-      left: 0,
+      width: 8,
+      height: 10,
+      left: 5,
       top: 0,
-      wallThickness: 0.5,
+      wallThickness: 0.2,
+      doors: [],
     },
     {
       id: 2,
       name: "bedroom",
-      width: 12.1,
-      height: 12,
-      left: 12.6,
-      top: 0,
-      wallThickness: 0.5,
+      width: 8,
+      height: 10,
+      left: 5,
+      top: 10,
+      wallThickness: 0.2,
+      doors: [],
     },
     {
       id: 3,
       name: "hall area",
-      width: 12.25,
-      height: 12.3,
+      width: 5,
+      height: 13.3,
       left: 0,
-      top: 12,
-      wallThickness: 0.5,
-    },
-    {
-      id: 4,
-      name: "ktn",
-      width: 7.6,
-      height: 7.6,
-      left: 12.25,
-      top: 12.3,
-      wallThickness: 0.5,
+      top: 7,
+      wallThickness: 0.2,
+      doors: [],
     },
     {
       id: 5,
       name: "toilet",
-      width: 7.6,
-      height: 7.6,
-      left: 19.85,
-      top: 12.3,
-      wallThickness: 0.5,
-    },
-    {
-      id: 6,
-      name: "toilet",
-      width: 4.5,
+      width: 5,
       height: 6,
-      left: 0,
-      top: 20,
-      wallThickness: 0.5,
-    },
-    {
-      id: 7,
-      name: "bedroom",
-      width: 14,
-      height: 12.1,
-      left: 12.25,
-      top: 19.6,
-      wallThickness: 0.5,
+      left: 8,
+      top: 14,
+      wallThickness: 0.2,
+      doors: [],
     },
     {
       id: 8,
       name: "parking",
-      width: 14.4,
-      height: 11.5,
+      width: 13,
+      height: 5,
       left: 0,
-      top: 26,
-      wallThickness: 0.5,
+      top: 20,
+      wallThickness: 0.2,
+      doors: [],
     },
   ]);
   const [facingDirection, setFacingDirection] = useState("North");
@@ -86,10 +76,23 @@ function Create2D() {
   const handleChange = (index, dimension, value) => {
     setRooms((prev) => {
       const newRooms = [...prev];
-      newRooms[index] = {
-        ...newRooms[index],
-        [dimension]: parseFloat(value) || 0,
-      };
+      const room = newRooms[index];
+
+      const newValue = parseFloat(value) || 0;
+
+      if (dimension === "width") {
+        if (room.left + newValue > houseWidth) {
+          alert("Room width exceeds house boundary");
+          return prev;
+        }
+      } else if (dimension === "height") {
+        if (room.top + newValue > houseHeight) {
+          alert("Room height exceeds house boundary");
+          return prev;
+        }
+      }
+
+      newRooms[index] = { ...room, [dimension]: newValue };
       return newRooms;
     });
   };
@@ -97,10 +100,23 @@ function Create2D() {
   const handlePositionChange = (index, position, value) => {
     setRooms((prev) => {
       const newRooms = [...prev];
-      newRooms[index] = {
-        ...newRooms[index],
-        [position]: parseFloat(value) || 0,
-      };
+      const room = newRooms[index];
+
+      const newValue = parseFloat(value) || 0;
+
+      if (position === "left") {
+        if (newValue + room.width > houseWidth) {
+          alert("Room exceeds house boundary on the right");
+          return prev;
+        }
+      } else if (position === "top") {
+        if (newValue + room.height > houseHeight) {
+          alert("Room exceeds house boundary on the bottom");
+          return prev;
+        }
+      }
+
+      newRooms[index] = { ...room, [position]: newValue };
       return newRooms;
     });
   };
@@ -122,12 +138,46 @@ function Create2D() {
       left: 0,
       top: 0,
       wallThickness: 1,
+      doors: [],
     };
     setRooms([...rooms, newRoom]);
   };
 
   const removeRoom = (id) => {
     setRooms(rooms.filter((room) => room.id !== id));
+  };
+
+  const addDoor = (roomId) => {
+    setRooms((prevRooms) => {
+      const newRooms = prevRooms.map((room) => {
+        if (room.id === roomId) {
+          const newDoor = {
+            id: room.doors.length + 1,
+            width: 1,
+            height: 2,
+            position: "left",
+          };
+          return { ...room, doors: [...room.doors, newDoor] };
+        }
+        return room;
+      });
+      return newRooms;
+    });
+  };
+
+  const removeDoor = (roomId, doorId) => {
+    setRooms((prevRooms) => {
+      const newRooms = prevRooms.map((room) => {
+        if (room.id === roomId) {
+          return {
+            ...room,
+            doors: room.doors.filter((door) => door.id !== doorId),
+          };
+        }
+        return room;
+      });
+      return newRooms;
+    });
   };
 
   useEffect(() => {
@@ -217,6 +267,82 @@ function Create2D() {
             <div className="room-area">
               <strong>Area:</strong> {room.width * room.height} sq ft
             </div>
+            <button onClick={() => addDoor(room.id)}>Add Door</button>
+            {room.doors.map((door) => (
+              <div key={door.id} className="door-input">
+                <h4>Door {door.id}</h4>
+                <input
+                  type="number"
+                  value={door.width}
+                  onChange={(e) => {
+                    const newWidth = parseFloat(e.target.value) || 0;
+                    setRooms((prevRooms) =>
+                      prevRooms.map((r) =>
+                        r.id === room.id
+                          ? {
+                              ...r,
+                              doors: r.doors.map((d) =>
+                                d.id === door.id ? { ...d, width: newWidth } : d
+                              ),
+                            }
+                          : r
+                      )
+                    );
+                  }}
+                  placeholder="Width (rem)"
+                />
+                <input
+                  type="number"
+                  value={door.height}
+                  onChange={(e) => {
+                    const newHeight = parseFloat(e.target.value) || 0;
+                    setRooms((prevRooms) =>
+                      prevRooms.map((r) =>
+                        r.id === room.id
+                          ? {
+                              ...r,
+                              doors: r.doors.map((d) =>
+                                d.id === door.id
+                                  ? { ...d, height: newHeight }
+                                  : d
+                              ),
+                            }
+                          : r
+                      )
+                    );
+                  }}
+                  placeholder="Height (rem)"
+                />
+                <select
+                  value={door.position}
+                  onChange={(e) => {
+                    const newPosition = e.target.value;
+                    setRooms((prevRooms) =>
+                      prevRooms.map((r) =>
+                        r.id === room.id
+                          ? {
+                              ...r,
+                              doors: r.doors.map((d) =>
+                                d.id === door.id
+                                  ? { ...d, position: newPosition }
+                                  : d
+                              ),
+                            }
+                          : r
+                      )
+                    );
+                  }}
+                >
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                  <option value="top">Top</option>
+                  <option value="bottom">Bottom</option>
+                </select>
+                <button onClick={() => removeDoor(room.id, door.id)}>
+                  Remove Door
+                </button>
+              </div>
+            ))}
             <button
               className="remove-room-button"
               onClick={() => removeRoom(room.id)}
@@ -227,25 +353,20 @@ function Create2D() {
         ))}
       </div>
 
-      <div className="total-area">
-        <h3>Total Area of All Rooms: {totalArea} sq ft</h3>
-        <h3>Remaining Area: {remainingArea >= 0 ? remainingArea : 0} sq ft</h3>
-        {remainingArea < 0 && (
-          <div className="error">Total room area exceeds the house area!</div>
-        )}
-      </div>
+      <Room2D
+        houseWidth={houseWidth}
+        houseHeight={houseHeight}
+        rooms={rooms}
+        facingDirection={facingDirection}
+      />
 
-      <div className="views-container">
-        <div className="view-2d-3d">
-          <div className="view-2d">
-            <h3>2D View (Facing {facingDirection})</h3>
-            <Room2D rooms={rooms} facingDirection={facingDirection} />
-          </div>
-          <div className="view-3d">
-            {/* <h3>3D View (Facing {facingDirection})</h3> */}
-            {/* <Room3D rooms={rooms} facingDirection={facingDirection} /> */}
-          </div>
-        </div>
+      <div className="summary">
+        <p>
+          <strong>Total Area:</strong> {totalArea} sq ft
+        </p>
+        <p>
+          <strong>Remaining Area:</strong> {remainingArea} sq ft
+        </p>
       </div>
     </div>
   );
