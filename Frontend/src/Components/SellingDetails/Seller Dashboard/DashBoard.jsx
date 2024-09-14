@@ -16,10 +16,10 @@ import { Snackbar, Alert } from "@mui/material";
 import axios from "axios";
 import config from "../../../config";
 import "./Style.css";
-
 function SellerDashboard() {
   const [tokenValid, setTokenValid] = useState(true);
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const [categoriesData, setCategoriesData] = useState({
     house: [],
     pgHostel: [],
@@ -33,16 +33,12 @@ function SellerDashboard() {
     wood: [],
   });
   const navigate = useNavigate();
-
   useEffect(() => {
     const checkTokenValidity = async () => {
       const token = localStorage.getItem("authToken");
       if (!token) {
         setTokenValid(false);
-        setOpenSnackbar(true);
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+        handleError("No authentication token found. Redirecting to login...");
         return;
       }
 
@@ -59,20 +55,20 @@ function SellerDashboard() {
           fetchCategoriesData(token);
         } else {
           setTokenValid(false);
-          setOpenSnackbar(true);
-          setTimeout(() => {
-            navigate("/login");
-          }, 2000);
+          handleError("Invalid token. Please log in again.");
         }
       } catch (error) {
-        console.error("Error validating token:", error);
+        if (error.response && error.response.status === 401) {
+          handleError("Unauthorized access. Redirecting to login...");
+        } else {
+          handleError(
+            "An error occurred during token validation. Please try again later."
+          );
+        }
         setTokenValid(false);
-        setOpenSnackbar(true);
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
       }
     };
+
 
     const fetchCategoriesData = async (token) => {
       try {
@@ -89,22 +85,22 @@ function SellerDashboard() {
           wood,
         ] = await Promise.all([
           axios.get(`${config.apiURL}/houseRoute/GetUserHouse`, {
-            headers: { Authorization: `Bearer ${token} ` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(`${config.apiURL}/pgHostelRoute/GetUserPG`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(`${config.apiURL}/cateringRoute/GetUserCatering`, {
-            headers: { Authorization: `Bearer ${token} ` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(`${config.apiURL}/cementRoutes/GetUserCement`, {
-            headers: { Authorization: `Bearer ${token} ` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(`${config.apiURL}/interiorRoute/GetUserInterior`, {
-            headers: { Authorization: `Bearer ${token} ` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(`${config.apiURL}/pipeWiresRoute/GetUserPipeWire`, {
-            headers: { Authorization: `Bearer ${token} ` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(`${config.apiURL}/sandRoute/GetUserSand`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -134,11 +130,21 @@ function SellerDashboard() {
         });
       } catch (error) {
         console.error("Error fetching categories data:", error);
+        handleError("Failed to load categories. Please try again later.");
       }
     };
 
     checkTokenValidity();
   }, [navigate]);
+
+  const handleError = (message) => {
+    setSnackbarMessage(message);
+    setOpenSnackbar(true);
+    setTimeout(() => {
+      navigate("/login");
+    }, 2000);
+  };
+
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
@@ -162,7 +168,7 @@ function SellerDashboard() {
             severity="warning"
             sx={{ width: "100%" }}
           >
-            Please login.
+            {snackbarMessage}
           </Alert>
         </Snackbar>
       </div>

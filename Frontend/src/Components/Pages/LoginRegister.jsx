@@ -46,8 +46,14 @@ const LoginRegister = () => {
         if (response.status === 200) {
             const { token, msg, id } = response.data;
 
+            // Set expiration time for 1 day (24 hours in milliseconds)
+            const oneDayInMilliseconds = 24 * 60 * 60 * 1000; // 1 day
+            const expiryTime = new Date().getTime() + oneDayInMilliseconds;
+
+            // Store token, user ID, and expiration time in localStorage
             localStorage.setItem("authToken", token);
             localStorage.setItem("userId", id);
+            localStorage.setItem("expiryTime", expiryTime);
             console.log(token);
 
             setSnackbarMessage(msg || "Login successful!");
@@ -67,6 +73,7 @@ const LoginRegister = () => {
     }
     setSnackbarOpen(true);
 };
+
 
 
   const handleRegisterSubmit = async (e) => {
@@ -118,7 +125,7 @@ const LoginRegister = () => {
           <h2>Login</h2>
           <form onSubmit={handleLoginSubmit}>
             <div className="input-group">
-              <i className="fas fa-envelope"></i>
+              {/* <i className="fas fa-envelope"></i> */}
               <input
                 type="email"
                 name="email"
@@ -129,7 +136,7 @@ const LoginRegister = () => {
               />
             </div>
             <div className="input-group">
-              <i className="fas fa-lock"></i>
+              {/* <i className="fas fa-lock"></i> */}
               <input
                 type="password"
                 name="password"
@@ -183,7 +190,7 @@ const LoginRegister = () => {
                 />
               </div>
               <div className="input-group">
-                <i className="fas fa-envelope"></i>
+                {/* <i className="fas fa-envelope"></i> */}
                 <input
                   type="email"
                   name="email"
@@ -196,7 +203,7 @@ const LoginRegister = () => {
             </div>
             <div className="input-row">
               <div className="input-group">
-                <i className="fas fa-lock"></i>
+                {/* <i className="fas fa-lock"></i> */}
                 <input
                   type="password"
                   name="password"
@@ -207,7 +214,7 @@ const LoginRegister = () => {
                 />
               </div>
               <div className="input-group">
-                <i className="fas fa-phone"></i>
+                {/* <i className="fas fa-phone"></i> */}
                 <input
                   type="tel"
                   name="phoneNumber"

@@ -1,8 +1,9 @@
 // ==============================|| THEME CONFIG  ||============================== //
 
 const config = {
-  apiURL: `https://a2zbackend.asgglobalcrm.in`,
+  // apiURL: `https://a2zbackend.asgglobalcrm.in`,
 
+  apiURL: `http://localhost:2002`,
 };
 
 export default config;
@@ -11,7 +12,7 @@ export default config;
 // import axios from 'axios';
 
 // const API = axios.create({
-//   apiURL: `http://localhost:2002`, // Your backend base URL
+//   // Your backend base URL
 // });
 
 // // Interceptor to include token in headers

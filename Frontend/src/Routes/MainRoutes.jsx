@@ -66,6 +66,8 @@ import CategorySteelall from "../Components/Categoryitemall/steelcategory";
 import CategoryStoneall from "../Components/Categoryitemall/stonecategory";
 import SellerInteriorView from "../Components/SellingDetails/SellerViewDetails/InteriorDetails";
 import Create2D from "../Components/HouseBuilding/2DCreate/2DCreate";
+import Loanpost from "../Components/SellingDetails/Loan/Loandealer";
+import LandForm from "../Components/SellingDetails/land/land";
 
 function MainRoutes() {
   return (
@@ -92,6 +94,9 @@ function MainRoutes() {
       <Route path="/sellDashBoard" element={<SellerDashboard />} />
       <Route path="/agents" element={<Agent />} />
       <Route path="/agentsList" element={<AgentDashboard />} />
+
+      <Route path="/Loan" element={<Loanpost />} />
+      <Route path="/Land" element={<LandForm />}></Route>
 
       {/* Home page Content */}
       <Route path="/categoryhouse" element={<CategoryHouse />} />

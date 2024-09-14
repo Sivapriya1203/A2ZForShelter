@@ -1,21 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  Upload,
+  Typography,
+  Slider,
+  Modal,
+  Row,
+  Col,
+} from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import axios from "axios";
-import "./steelPost.css";
 import config from "../../../config";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
+import { Snackbar, Alert } from "@mui/material";
+import "./steelPost.css"; // Import your custom CSS if needed
+
+const { Title } = Typography;
+const { Option } = Select;
 
 const SteelpostForm = () => {
-  const userId = localStorage.getItem('userId');
-  console.log(userId);
+  const [form] = Form.useForm();
 
   const [formData, setFormData] = useState({
-    userId,
+    userId: "",
     name: "",
     email: "",
     phoneNumber: "",
     shopAddress: "",
-    brand: "Tata Steel",
+    brand: "Tata Steel", // Default brand
     steelCategory: "Steel",
     steelType: "Sheet",
     steelThickness: "6 mm",
@@ -25,61 +39,108 @@ const SteelpostForm = () => {
     description: "",
   });
 
+  const [fileList, setFileList] = useState([]);
+  const [previewImage, setPreviewImage] = useState("");
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewTitle, setPreviewTitle] = useState("");
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // or 'error'
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  useEffect(() => {
+    const authToken = localStorage.getItem("authToken");
+
+    if (authToken) {
+      axios
+        .get(`${config.apiURL}/api/getprofile`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        })
+        .then((response) => {
+          const { username, email, phoneNumber, _id } = response.data;
+          // Update form data
+          setFormData((prevData) => ({
+            ...prevData,
+            userId: _id,
+            name: username,
+            email,
+            phoneNumber,
+          }));
+          // Set values in the form inputs
+          form.setFieldsValue({
+            name: username,
+            email,
+            phoneNumber,
+          });
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+        });
+    }
+  }, [form]);
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  const handleChange = (changedValues) => {
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      ...changedValues,
     }));
   };
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
+  const handleUploadChange = ({ fileList }) => {
+    setFileList(fileList);
     setFormData((prevData) => ({
       ...prevData,
-      images: [...prevData.images, ...files],
+      images: fileList.map((file) => file.originFileObj),
     }));
   };
 
-  const handleRemoveImage = (index) => {
-    setFormData((prevData) => {
-      const newImages = prevData.images.filter((_, i) => i !== index);
-      return {
-        ...prevData,
-        images: newImages,
-      };
-    });
+  const handlePreview = async (file) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
+    }
+
+    setPreviewImage(file.url || file.preview);
+    setPreviewVisible(true);
+    setPreviewTitle(
+      file.name || file.url.substring(file.url.lastIndexOf("/") + 1)
+    );
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Create FormData to include images
+  const handleSubmit = async () => {
     const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
-      if (key === 'images') {
-        formData[key].forEach((file) => {
-          formDataToSend.append('images', file);
-        });
+      if (key === "images") {
+        formData.images.forEach((file) =>
+          formDataToSend.append("images", file)
+        );
       } else {
         formDataToSend.append(key, formData[key]);
       }
     });
 
     try {
-      const response = await axios.post(`${config.apiURL}/steelRoute/steel`, formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.post(
+        `${config.apiURL}/steelRoute/steel`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       setSnackbarMessage("Form submitted successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
+
+      // Reset form data after submission
       setFormData({
+        userId,
         name: "",
         email: "",
         phoneNumber: "",
@@ -87,265 +148,286 @@ const SteelpostForm = () => {
         brand: "Tata Steel",
         steelCategory: "Steel",
         steelType: "Sheet",
-        steelThickness: "",
+        steelThickness: "6 mm",
         meter: "1 Meter",
         price: "",
         images: [],
         description: "",
-      })
-      console.log('Form Data Submitted Successfully: ', response.data);
-  
+      });
+      setFileList([]);
     } catch (error) {
       setSnackbarMessage("Error submitting form.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
-      console.error('Error submitting form: ', error);
     }
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  const getBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+
+  const inputStyle = { height: "50px" }; // Adjust the height for input fields
 
   return (
-    <div className="container">
-      <h2>Steel Seller</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>
-            Name:<span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Email ID:<span className="required">*</span>
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Phone Number:<span className="required">*</span>
-          </label>
-          <input
-            type="tel"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Shop Address:<span className="required">*</span>
-          </label>
-          <textarea
-            name="shopAddress"
-            value={formData.shopAddress}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Brand:<span className="required">*</span>
-          </label>
-          <select
-            name="brand"
-            value={formData.brand}
-            onChange={handleChange}
-            required
-          >
-            {[
-              "Kiscol",
-              "Tirumalai Steels",
-              "Inframat Alloys",
-              "Meenakshi Group",
-              "JSW Steel",
-              "SAIL",
-              "Essar Steel",
-              "Jindal Steel",
-              "RINL Steel",
-              "VISA Steel",
-              "MESCO Steel",
-              "Ratnamani Metals",
-              "Prime Gold International Limited",
-              "Bhushan Power and Steel",
-              "ESL Steel",
-            ].map((brand) => (
-              <option key={brand} value={brand}>
-                {brand}
-              </option>
-            ))}
-          </select>
-        </div>
+    <div
+      className="container"
+      style={{ width: "80%", maxWidth: "1200px", margin: "0 auto" }}
+    >
+      <Title
+        level={1}
+        style={{ textAlign: "center", marginBottom: "20px", fontWeight: "700" }}
+      >
+        Steel Seller
+      </Title>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>
-              Steel Category:<span className="required">*</span>
-            </label>
-            <select
-              name="steelCategory"
-              value={formData.steelCategory}
-              onChange={handleChange}
-              required
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        onValuesChange={handleChange}
+        initialValues={formData}
+      >
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Name"
+              name="name"
+              rules={[{ required: true, message: "Please input your name!" }]}
             >
-              {[
-                "Steel",
-                "Stainless Steel",
-                "Aluminium",
-                "Tool Steel",
-                "Alloy",
-                "Nickel",
-                "Brass, Copper, & Bronze",
-              ].map((steelCategory) => (
-                <option key={steelCategory} value={steelCategory}>
-                  {steelCategory}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>
-              Steel Type:<span className="required">*</span>
-            </label>
-            <select
-              name="steelType"
-              value={formData.steelType}
-              onChange={handleChange}
-              required
+              <Input type="name" style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Email ID"
+              name="email"
+              rules={[{ required: true, message: "Please input your email!" }]}
             >
-              {[
-                "Sheet",
-                "Plate",
-                "Coil",
-                "Flat Bar",
-                "Hexagon Bar",
-                "Round Bar",
-                "Square Bar",
-                "Reinforcing Bar",
-                "Bar Grating",
-                "Flattened Expanded Metal",
-                "Medium Pattern Thread Plate",
-              ].map((steelType) => (
-                <option key={steelType} value={steelType}>
-                  {steelType}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+              <Input type="email" style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+        </Row>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>
-              Steel Thickness / Dia:<span className="required">*</span>
-            </label>
-            <select
-              name="steelThickness"
-              value={formData.steelThickness}
-              onChange={handleChange}
-              required
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Phone Number"
+              name="phoneNumber"
+              rules={[
+                { required: true, message: "Please input your phone number!" },
+              ]}
             >
-              {[
-                "6 mm",
-                "8 mm",
-                "10 mm",
-                "12 mm",
-                "16 mm",
-                "20 mm",
-                "25 mm",
-                "28 mm",
-                "32 mm",
-                "36 mm",
-                "and More",
-              ].map((steelThickness) => (
-                <option key={steelThickness} value={steelThickness}>
-                  {steelThickness}
-                </option>
-              ))}
-            </select>
-          </div>
+              <Input type="tel" style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Shop Address"
+              name="shopAddress"
+              rules={[
+                { required: true, message: "Please input your shop address!" },
+              ]}
+            >
+              <Input.TextArea style={inputStyle} />
+            </Form.Item>
+          </Col>
+        </Row>
 
-          <div className="form-group">
-            <label>Meter:</label>
-            <input type="text" name="meter" value={formData.meter} readOnly />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label>
-            Price:<span className="required">*</span>
-          </label>
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Upload Images:<span className="required">*</span>
-          </label>
-          <input
-            type="file"
-            name="images"
-            accept="image/*"
-            onChange={handleImageChange}
-            multiple
-          />
-        </div>
-        <div className="image-preview">
-          {formData.images.map((image, index) => (
-            <div key={index} className="image-container">
-              <img
-                src={URL.createObjectURL(image)}
-                alt={`Preview ${index}`}
-                className="image-preview-item"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(index)}
-                className="remove-image-button"
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Brand"
+              name="brand"
+              rules={[{ required: true, message: "Please select a brand!" }]}
+            >
+              <Select
+                value={formData.brand}
+                onChange={(value) => handleChange({ brand: value })}
+                style={inputStyle}
               >
-                X
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className="form-group">
-          <label>
-            Description:<span className="required">*</span>
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <button type="submit">Submit</button>
-        </div>
-      </form>
+                {[
+                  "Kiscol",
+                  "Tirumalai Steels",
+                  "Inframat Alloys",
+                  "Meenakshi Group",
+                  "JSW Steel",
+                  "SAIL",
+                  "Essar Steel",
+                  "Jindal Steel",
+                  "RINL Steel",
+                  "VISA Steel",
+                  "MESCO Steel",
+                  "Ratnamani Metals",
+                  "Prime Gold International Limited",
+                  "Bhushan Power and Steel",
+                  "ESL Steel",
+                ].map((brand) => (
+                  <Option key={brand} value={brand}>
+                    {brand}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Steel Category"
+              name="steelCategory"
+              rules={[{ required: true, message: "Please select a category!" }]}
+            >
+              <Select
+                value={formData.steelCategory}
+                onChange={(value) => handleChange({ steelCategory: value })}
+                style={inputStyle}
+              >
+                {[
+                  "Steel",
+                  "Stainless Steel",
+                  "Aluminium",
+                  "Tool Steel",
+                  "Alloy",
+                  "Nickel",
+                  "Brass, Copper, & Bronze",
+                ].map((category) => (
+                  <Option key={category} value={category}>
+                    {category}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
 
-      {/* Snackbar for success/error messages */}
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Steel Type"
+              name="steelType"
+              rules={[
+                { required: true, message: "Please select a steel type!" },
+              ]}
+            >
+              <Select
+                value={formData.steelType}
+                onChange={(value) => handleChange({ steelType: value })}
+                style={inputStyle}
+              >
+                {[
+                  "Sheet",
+                  "Plate",
+                  "Coil",
+                  "Flat Bar",
+                  "Hexagon Bar",
+                  "Round Bar",
+                  "Square Bar",
+                  "Reinforcing Bar",
+                  "Bar Grating",
+                  "Expanded Metal",
+                  "Thread Plate",
+                ].map((type) => (
+                  <Option key={type} value={type}>
+                    {type}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Steel Thickness (mm)"
+              name="steelThickness"
+              rules={[
+                { required: true, message: "Please select the thickness!" },
+              ]}
+            >
+              <Select
+                value={formData.steelThickness}
+                onChange={(value) => handleChange({ steelThickness: value })}
+                style={inputStyle}
+              >
+                {[
+                  "6 mm",
+                  "8 mm",
+                  "10 mm",
+                  "12 mm",
+                  "16 mm",
+                  "20 mm",
+                  "25 mm",
+                  "32 mm",
+                ].map((thickness) => (
+                  <Option key={thickness} value={thickness}>
+                    {thickness}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Price"
+              name="price"
+              rules={[{ required: true, message: "Please input the price!" }]}
+            >
+              <Input type="number" min={1} style={inputStyle} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Upload Images"
+              rules={[
+                {
+                  required: true,
+                  message: "Please upload at least one image!",
+                },
+              ]}
+            >
+              <Upload
+                listType="picture-card"
+                fileList={fileList}
+                onChange={handleUploadChange}
+                onPreview={handlePreview}
+                beforeUpload={() => false}
+                multiple
+              >
+                {fileList.length >= 8 ? null : (
+                  <Button icon={<UploadOutlined />}>Upload</Button>
+                )}
+              </Upload>
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item
+          label="Description"
+          name="description"
+          rules={[{ required: true, message: "Please provide a description!" }]}
+        >
+          <Input.TextArea style={inputStyle} />
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            Submit
+          </Button>
+        </Form.Item>
+      </Form>
+
+      <Modal
+        open={previewVisible}
+        title={previewTitle}
+        footer={null}
+        onCancel={() => setPreviewVisible(false)}
+      >
+        <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+      </Modal>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
@@ -354,7 +436,7 @@ const SteelpostForm = () => {
         <Alert
           onClose={handleSnackbarClose}
           severity={snackbarSeverity}
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {snackbarMessage}
         </Alert>

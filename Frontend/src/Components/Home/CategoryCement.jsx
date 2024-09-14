@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Carousel } from 'react-responsive-carousel';
-import 'react-responsive-carousel/lib/styles/carousel.min.css';
-import config from '../../config';
-import './CategoryHouse.css';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { Carousel } from "react-responsive-carousel";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
+import config from "../../config";
+import "./CategoryHouse.css";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 
 const CategoryCement = () => {
   const [data, setData] = useState([]);
@@ -33,7 +33,7 @@ const CategoryCement = () => {
   }, []);
 
   const handleArrowClick = () => {
-    navigate('/cementall');
+    navigate("/cementall");
   };
 
   const handleCardClick = (cementId) => {
@@ -68,25 +68,32 @@ const CategoryCement = () => {
 
       <div className="card-container">
         {data.slice(0, 4).map((cement, index) => (
-            <div key={index} className="card" onClick={() => handleCardClick(cement._id)}>
-          <div key={index} className="card">
-            <Carousel
-              showThumbs={false}
-              infiniteLoop
-              autoPlay
-              stopOnHover
-              dynamicHeight
-              className="carousel"
-            >
-              {cement.images.map((photo, idx) => (
-                <div key={idx}>
-                  <img src={`${config.apiURL}/${photo}`} alt={`Cement ${cement.name}`} />
-                </div>
-              ))}
-            </Carousel>
-            <div className="card-content">
-            <button 
-                  onClick={() => handleAddToFavourites(cement._id)} 
+          <div
+            key={index}
+            className="card"
+            onClick={() => handleCardClick(cement._id)}
+          >
+            <div key={index} className="card">
+              <Carousel
+                showThumbs={false}
+                infiniteLoop
+                autoPlay
+                stopOnHover
+                dynamicHeight
+                className="carousel"
+              >
+                {cement.images.map((photo, idx) => (
+                  <div key={idx}>
+                    <img
+                      src={`${config.apiURL}/${photo}`}
+                      alt={`Cement ${cement.name}`}
+                    />
+                  </div>
+                ))}
+              </Carousel>
+              <div className="card-content">
+                <button
+                  onClick={() => handleAddToFavourites(cement._id)}
                   className="favourite-button"
                 >
                   {favourites.includes(cement._id) ? (
@@ -95,22 +102,33 @@ const CategoryCement = () => {
                     <FaRegHeart className="favourite-icon" />
                   )}
                 </button>
-              <h3>{cement.brand}</h3>
-              <p><strong>Seller Name:</strong> {cement.name}</p>
-              <p><strong>Type:</strong> {cement.cementType}</p>
-              <p><strong>Quantity:</strong> {cement.quantity}</p>
-              <p><strong>Price:</strong> {cement.price} RPS</p>
-              <div className="card-buttons">
-                <button onClick={() => handleViewDetailsClick(cement._id)} className="view-details-button">
-                  View Details
-                </button>
+                <h3>{cement.brand}</h3>
+                <p>
+                  <strong>Seller Name:</strong> {cement.name}
+                </p>
+                <p>
+                  <strong>Type:</strong> {cement.cementType}
+                </p>
+                <p>
+                  <strong>Quantity:</strong> {cement.quantity} <span>Kg</span>
+                </p>
+                <p>
+                  <strong>Price:</strong> {cement.price} RPS
+                </p>
+                <div className="card-buttons">
+                  <button
+                    onClick={() => handleViewDetailsClick(cement._id)}
+                    className="view-details-button"
+                  >
+                    View Details
+                  </button>
+                </div>
               </div>
             </div>
-          </div></div>
+          </div>
         ))}
       </div>
     </div>
-    
   );
 };
 

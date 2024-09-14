@@ -106,7 +106,7 @@ const CategoryCement = () => {
                 <strong>Type:</strong> {cement.cementType}
               </p>
               <p>
-                <strong>Quantity:</strong> {cement.quantity}
+                <strong>Quantity:</strong> {cement.quantity} <span>Kg</span>
               </p>
               <p>
                 <strong>Price:</strong> {cement.price} RPS

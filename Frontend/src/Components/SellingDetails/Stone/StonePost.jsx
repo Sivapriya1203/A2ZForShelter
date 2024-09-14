@@ -1,16 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  Upload,
+  Typography,
+  Modal,
+  Row,
+  Col,
+} from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import axios from "axios";
-import "../SalePost.css";
-import config from "../../../config";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import config from "../../../config";
+import "../SalePost.css"; // Custom CSS if needed
+
+const { Title } = Typography;
+const { Option } = Select;
 
 const StonepostForm = () => {
-  const userId = localStorage.getItem("userId");
-  console.log(userId);
+  const [form] = Form.useForm();
 
   const [formData, setFormData] = useState({
-    userId,
+    userId: "",
     name: "",
     email: "",
     phoneNumber: "",
@@ -23,46 +37,86 @@ const StonepostForm = () => {
     description: "",
   });
 
+  const [fileList, setFileList] = useState([]);
+  const [previewImage, setPreviewImage] = useState("");
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewTitle, setPreviewTitle] = useState("");
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // or 'error'
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  useEffect(() => {
+    const authToken = localStorage.getItem("authToken");
+
+    if (authToken) {
+      axios
+        .get(`${config.apiURL}/api/getprofile`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        })
+        .then((response) => {
+          const { username, email, phoneNumber, _id } = response.data;
+          // Update form data
+          setFormData((prevData) => ({
+            ...prevData,
+            userId: _id,
+            name: username,
+            email,
+            phoneNumber,
+          }));
+          // Set values in the form inputs
+          form.setFieldsValue({
+            name: username,
+            email,
+            phoneNumber,
+          });
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+        });
+    }
+  }, [form]);
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  const handleChange = (changedValues) => {
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      ...changedValues,
     }));
   };
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
+  const handleUploadChange = ({ fileList }) => {
+    setFileList(fileList);
     setFormData((prevData) => ({
       ...prevData,
-      images: [...prevData.images, ...files],
+      images: fileList.map((file) => file.originFileObj),
     }));
   };
 
-  const handleRemoveImage = (index) => {
-    setFormData((prevData) => {
-      const newImages = prevData.images.filter((_, i) => i !== index);
-      return {
-        ...prevData,
-        images: newImages,
-      };
-    });
+  const handlePreview = async (file) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
+    }
+
+    setPreviewImage(file.url || file.preview);
+    setPreviewVisible(true);
+    setPreviewTitle(
+      file.name || file.url.substring(file.url.lastIndexOf("/") + 1)
+    );
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Create FormData to handle images
+  const handleSubmit = async () => {
     const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === "images") {
-        formData[key].forEach((file) => {
-          formDataToSend.append("images", file);
-        });
+        formData.images.forEach((file) =>
+          formDataToSend.append("images", file)
+        );
       } else {
         formDataToSend.append(key, formData[key]);
       }
@@ -81,7 +135,10 @@ const StonepostForm = () => {
       setSnackbarMessage("Form submitted successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
+
+      // Reset the form after submission
       setFormData({
+        userId,
         name: "",
         email: "",
         phoneNumber: "",
@@ -92,188 +149,207 @@ const StonepostForm = () => {
         price: "",
         images: [],
         description: "",
-      })
-
-      console.log("Form submitted successfully", response.data);
-     
+      });
+      setFileList([]);
     } catch (error) {
       setSnackbarMessage("Error submitting form.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
-      console.error("Error submitting form:", error);
     }
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  const getBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+
+  const inputStyle = { height: "50px" }; // Adjust height if needed
 
   return (
-    <div className="container">
-      <h2>Stone Seller</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>
-            Name: <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Email ID: <span className="required">*</span>
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Phone Number: <span className="required">*</span>
-          </label>
-          <input
-            type="tel"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Seller Address: <span className="required">*</span>
-          </label>
-          <textarea
-            name="sellerAddress"
-            value={formData.sellerAddress}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Stone Category: <span className="required">*</span>
-          </label>
-          <select
-            name="stoneCategory"
-            value={formData.stoneCategory}
-            onChange={handleChange}
-            required
-          >
-            {[
-              "Granite",
-              "Basalt and trap",
-              "Serpentine",
-              "Limestone",
-              "Chalk",
-              "Sandstone",
-              "Caliche",
-              "Marble",
-              "Slate",
-              "Quartzite",
-              "Laterite",
-              "Gneiss",
-            ].map((stoneCategory) => (
-              <option key={stoneCategory} value={stoneCategory}>
-                {stoneCategory}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label>
-            Stone Type: <span className="required">*</span>
-          </label>
-          <select
-            name="stoneType"
-            value={formData.stoneType}
-            onChange={handleChange}
-            required
-          >
-            {["Whole", "Crushed"].map((stoneType) => (
-              <option key={stoneType} value={stoneType}>
-                {stoneType}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label>Quantity:</label>
-          <input
-            type="text"
-            name="quantity"
-            value={formData.quantity}
-            readOnly
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Price: <span className="required">*</span>
-          </label>
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Upload Images: <span className="required">*</span>
-          </label>
-          <input
-            type="file"
-            name="images"
-            accept="image/*"
-            onChange={handleImageChange}
-            multiple
-          />
-        </div>
-        <div className="image-preview">
-          {formData.images.map((image, index) => (
-            <div key={index} className="image-container">
-              <img
-                src={URL.createObjectURL(image)}
-                alt={`Preview ${index}`}
-                className="image-preview-item"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(index)}
-                className="remove-image-button"
-              >
-                X
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className="form-group">
-          <label>
-            Description: <span className="required">*</span>
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <button type="submit">Submit</button>
-        </div>
-      </form>
+    <div
+      className="container"
+      style={{ width: "80%", maxWidth: "1200px", margin: "0 auto" }}
+    >
+      <Title
+        level={1}
+        style={{ textAlign: "center", marginBottom: "20px", fontWeight: "700" }}
+      >
+        Stone Seller
+      </Title>
 
-      {/* Snackbar for success/error messages */}
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        onValuesChange={handleChange}
+        initialValues={formData}
+      >
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Name"
+              name="name"
+              rules={[{ required: true, message: "Please input your name!" }]}
+            >
+              <Input style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Email ID"
+              name="email"
+              rules={[{ required: true, message: "Please input your email!" }]}
+            >
+              <Input type="email" style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Phone Number"
+              name="phoneNumber"
+              rules={[
+                { required: true, message: "Please input your phone number!" },
+              ]}
+            >
+              <Input type="tel" style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Seller Address"
+              name="sellerAddress"
+              rules={[
+                { required: true, message: "Please input your address!" },
+              ]}
+            >
+              <Input.TextArea style={inputStyle} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Stone Category"
+              name="stoneCategory"
+              rules={[{ required: true, message: "Please select a category!" }]}
+            >
+              <Select
+                value={formData.stoneCategory}
+                onChange={(value) => handleChange({ stoneCategory: value })}
+                style={inputStyle}
+              >
+                {[
+                  "Granite",
+                  "Basalt and trap",
+                  "Serpentine",
+                  "Limestone",
+                  "Chalk",
+                  "Sandstone",
+                  "Caliche",
+                  "Marble",
+                  "Slate",
+                  "Quartzite",
+                  "Laterite",
+                  "Gneiss",
+                ].map((category) => (
+                  <Option key={category} value={category}>
+                    {category}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Stone Type"
+              name="stoneType"
+              rules={[
+                { required: true, message: "Please select a stone type!" },
+              ]}
+            >
+              <Select
+                value={formData.stoneType}
+                onChange={(value) => handleChange({ stoneType: value })}
+                style={inputStyle}
+              >
+                {["Whole", "Crushed"].map((type) => (
+                  <Option key={type} value={type}>
+                    {type}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item label="Quantity" name="quantity">
+              <Input value={formData.quantity} readOnly style={inputStyle} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Price"
+              name="price"
+              rules={[{ required: true, message: "Please input the price!" }]}
+            >
+              <Input type="number" min={1} style={inputStyle} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item
+          label="Upload Images"
+          rules={[
+            { required: true, message: "Please upload at least one image!" },
+          ]}
+        >
+          <Upload
+            listType="picture-card"
+            fileList={fileList}
+            onChange={handleUploadChange}
+            onPreview={handlePreview}
+            beforeUpload={() => false}
+            multiple
+          >
+            {fileList.length >= 8 ? null : (
+              <Button icon={<UploadOutlined />}>Upload</Button>
+            )}
+          </Upload>
+        </Form.Item>
+
+        <Form.Item
+          label="Description"
+          name="description"
+          rules={[{ required: true, message: "Please provide a description!" }]}
+        >
+          <Input.TextArea style={inputStyle} />
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            Submit
+          </Button>
+        </Form.Item>
+      </Form>
+
+      <Modal
+        open={previewVisible}
+        title={previewTitle}
+        footer={null}
+        onCancel={() => setPreviewVisible(false)}
+      >
+        <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+      </Modal>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
@@ -292,14 +368,3 @@ const StonepostForm = () => {
 };
 
 export default StonepostForm;
-
-<span
-  style={{
-    fontWeight: "bolder",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: "40px",
-  }}
->
-  Paid
-</span>;

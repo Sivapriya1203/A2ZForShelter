@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../House/AdForm.css";
+import "../House/PostHouse.css";
 import config from "../../../config";
 import { TextField, MenuItem, Grid, Snackbar, Alert } from "@mui/material";
 

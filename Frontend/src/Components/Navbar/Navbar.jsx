@@ -9,12 +9,32 @@ const Navbar = () => {
   const [profileImage, setProfileImage] = useState("");
 
   useEffect(() => {
-    // Check if token exists in localStorage
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      setIsLoggedIn(true);
-      fetchUserProfile(token); // Fetch the profile image if logged in
-    }
+    // Function to check token validity and handle expiration
+    const checkTokenValidity = () => {
+      const token = localStorage.getItem("authToken");
+      const storedExpiryTime = localStorage.getItem("expiryTime");
+      const now = new Date().getTime();
+
+      if (token && storedExpiryTime) {
+        if (now > storedExpiryTime) {
+          // Token is expired, remove it and log out the user
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("expiryTime");
+          setIsLoggedIn(false); // Token is expired, mark the user as logged out
+          console.log("Token has expired.");
+        } else {
+          // Token is still valid
+          setIsLoggedIn(true);
+          fetchUserProfile(token); // Fetch the profile image if logged in
+        }
+      } else {
+        setIsLoggedIn(false); // No valid token found
+      }
+    };
+
+    // Run the token validity check
+    checkTokenValidity();
   }, []);
 
   const fetchUserProfile = async (token) => {

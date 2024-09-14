@@ -29,7 +29,6 @@ function AdList() {
     return (
       <div className="loading-container">
         <CircularProgress />
-        <p>Loading ads...</p>
       </div>
     );
   if (error) return <p className="error-message">{error}</p>;

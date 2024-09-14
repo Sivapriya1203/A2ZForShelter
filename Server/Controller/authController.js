@@ -63,7 +63,7 @@ exports.login = async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: "2h" },
+      { expiresIn: "24h" },
       (err, token) => {
         if (err) throw err;
 
@@ -99,6 +99,8 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ msg: 'User not found' });
     }
     res.json(user);
+    // console.log(user);
+
   } catch (error) {
     res.status(500).json({ msg: 'Server Error' });
   }

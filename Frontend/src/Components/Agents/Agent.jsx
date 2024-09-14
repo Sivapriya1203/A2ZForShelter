@@ -1,13 +1,17 @@
-import React, { useState } from "react";
-import "./Agent.css";
+import React, { useState, useEffect } from "react";
+import { Form, Input, Button, Upload, Modal, Row, Col, Typography } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import { Snackbar, Alert } from "@mui/material";
 import axios from "axios";
-import { Snackbar, Alert, CircularProgress } from "@mui/material";
 import config from "../../config"; // Assuming you have a config file for API URL
 
+const { Title } = Typography;
+
 const Agent = () => {
-  const userId = localStorage.getItem("userId");
+  const [form] = Form.useForm();
+
   const [formData, setFormData] = useState({
-    userId,
+    userId: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -17,68 +21,100 @@ const Agent = () => {
     images: [],
   });
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false); // Snackbar state
-  const [snackbarMessage, setSnackbarMessage] = useState(""); // Message for Snackbar
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // Snackbar type
-  const [loading, setLoading] = useState(false); // Loading state for form submission
+  const [fileList, setFileList] = useState([]);
+  const [previewImage, setPreviewImage] = useState("");
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewTitle, setPreviewTitle] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const authToken = localStorage.getItem("authToken");
+
+    if (authToken) {
+      axios
+        .get(`${config.apiURL}/api/getprofile`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        })
+        .then((response) => {
+          const { username, email, phoneNumber, _id } = response.data;
+          // Update form data
+          setFormData((prevData) => ({
+            ...prevData,
+            userId: _id,
+            email,
+            phoneNumber,
+          }));
+          // Set values in the form inputs
+          form.setFieldsValue({
+            email,
+            phoneNumber,
+          });
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+        });
+    }
+  }, [form]);
 
   // Handle form input changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  // Handle image selection
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files); // Converting FileList to an array
+  const handleChange = (changedValues) => {
     setFormData((prevData) => ({
       ...prevData,
-      images: [...prevData.images, ...files],
+      ...changedValues,
     }));
   };
 
-  // Remove an image from the preview
-  const handleRemoveImage = (index) => {
-    setFormData((prevData) => {
-      const newImages = prevData.images.filter((_, i) => i !== index);
-      return {
-        ...prevData,
-        images: newImages,
-      };
-    });
+  // Handle image upload change
+  const handleUploadChange = ({ fileList }) => {
+    setFileList(fileList);
+    setFormData((prevData) => ({
+      ...prevData,
+      images: fileList.map((file) => file.originFileObj),
+    }));
   };
 
-  // Validate phone number (basic validation)
-  const isValidPhoneNumber = (phoneNumber) => {
-    const phoneRegex = /^[0-9]{10}$/;
-    return phoneRegex.test(phoneNumber);
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Check if phone number is valid
-    if (!isValidPhoneNumber(formData.phoneNumber)) {
-      setSnackbarMessage("Invalid phone number. Must be 10 digits.");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return;
+  // Handle image preview
+  const handlePreview = async (file) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
     }
 
-    const formDataToSend = new FormData();
+    setPreviewImage(file.url || file.preview);
+    setPreviewVisible(true);
+    setPreviewTitle(
+      file.name || file.url.substring(file.url.lastIndexOf("/") + 1)
+    );
+  };
 
-    // Append all form data fields except images
+  // Convert file to base64 string for image preview
+  const getBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === "images") {
-        formData[key].forEach((file) => formDataToSend.append("images", file));
+        formData.images.forEach((file) =>
+          formDataToSend.append("images", file)
+        );
       } else {
         formDataToSend.append(key, formData[key]);
       }
     });
 
     try {
-      setLoading(true); // Set loading state
+      setLoading(true); // Start loading
 
       const response = await axios.post(
         `${config.apiURL}/agentRoute/createAgent`,
@@ -90,12 +126,12 @@ const Agent = () => {
         }
       );
 
-      // If successful, show success message in Snackbar
+      // Success feedback
       setSnackbarMessage("Registration Successful!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
 
-      // Reset form fields after successful submission
+      // Reset form fields after submission
       setFormData({
         firstName: "",
         lastName: "",
@@ -105,127 +141,144 @@ const Agent = () => {
         productInterest: "",
         images: [],
       });
+      setFileList([]);
     } catch (error) {
-      // Show error message in Snackbar
+      // Error feedback
       setSnackbarMessage("Registration Failed. Please try again.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false); // Stop loading
     }
   };
-
-  // Handle Snackbar close
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
-
+  const inputStyle = { height: "50px" };
   return (
-    <div>
-      <form onSubmit={handleSubmit} className="registration-form">
-        <h2>Marketing Agents Registration Form</h2>
+    <div
+      className="container"
+      style={{ width: "80%", maxWidth: "1200px", margin: "0 auto" }}
+    >
+      <Title
+        level={2}
+        style={{ textAlign: "center", marginBottom: "20px", fontWeight: "700" }}
+      >
+        Marketing Agents Registration Form
+      </Title>
 
-        <label htmlFor="firstName">First Name *</label>
-        <input
-          type="text"
-          name="firstName"
-          placeholder="First Name"
-          value={formData.firstName}
-          onChange={handleChange}
-          required
-        />
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        onValuesChange={handleChange}
+      >
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="First Name"
+              name="firstName"
+              rules={[
+                { required: true, message: "Please input your first name!" },
+              ]}
+            >
+              <Input style={inputStyle} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Last Name"
+              name="lastName"
+              rules={[
+                { required: true, message: "Please input your last name!" },
+              ]}
+            >
+              <Input style={inputStyle} />
+            </Form.Item>
+          </Col>
+        </Row>
 
-        <label htmlFor="lastName">Last Name *</label>
-        <input
-          type="text"
-          name="lastName"
-          placeholder="Last Name"
-          value={formData.lastName}
-          onChange={handleChange}
-          required
-        />
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[{ required: true, message: "Please input your email!" }]}
+            >
+              <Input type="email" style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Phone Number"
+              name="phoneNumber"
+              rules={[
+                { required: true, message: "Please input your phone number!" },
+              ]}
+            >
+              <Input type="tel" style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+        </Row>
 
-        <label htmlFor="email">Email *</label>
-        <input
-          type="email"
-          name="email"
-          placeholder="example@example.com"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item label="Company / Agency Name" name="companyName">
+              <Input style={inputStyle} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Describe Product Interested In"
+              name="productInterest"
+            >
+              <Input.TextArea />
+            </Form.Item>
+          </Col>
+        </Row>
 
-        <label htmlFor="companyName">Company / Agency Name</label>
-        <input
-          type="text"
-          name="companyName"
-          value={formData.companyName}
-          onChange={handleChange}
-        />
-
-        <label htmlFor="phoneNumber">Phone Number *</label>
-        <input
-          type="tel"
-          name="phoneNumber"
-          value={formData.phoneNumber}
-          onChange={handleChange}
-          required
-        />
-
-        <label htmlFor="productInterest">Describe Product Interested In?</label>
-        <textarea
-          name="productInterest"
-          value={formData.productInterest}
-          onChange={handleChange}
-        ></textarea>
-
-        {/* Image upload */}
-        <div className="form-group">
-          <label>
-            Upload Images: <span className="required">*</span>
-          </label>
-          <input
-            type="file"
-            name="images"
-            accept="image/*"
-            onChange={handleImageChange}
+        <Form.Item
+          label="Upload Images"
+          rules={[
+            { required: true, message: "Please upload at least one image!" },
+          ]}
+        >
+          <Upload
+            listType="picture-card"
+            fileList={fileList}
+            onChange={handleUploadChange}
+            onPreview={handlePreview} // Preview handler
+            beforeUpload={() => false}
             multiple
-          />
-        </div>
+          >
+            {fileList.length >= 8 ? null : (
+              <Button icon={<UploadOutlined />}>Upload</Button>
+            )}
+          </Upload>
+        </Form.Item>
 
-        {/* Image preview */}
-        <div className="image-preview">
-          {formData.images.map((image, index) => (
-            <div key={index} className="image-container">
-              <img
-                src={URL.createObjectURL(image)}
-                alt={`Preview ${index}`}
-                className="image-preview-item"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(index)}
-                className="remove-image-button"
-              >
-                X
-              </button>
-            </div>
-          ))}
-        </div>
+        {/* Image Preview Modal */}
+        <Modal
+          open={previewVisible} // Changed from visible to open
+          title={previewTitle}
+          footer={null}
+          onCancel={() => setPreviewVisible(false)}
+        >
+          <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+        </Modal>
 
-        <button type="submit" disabled={loading}>
-          {loading ? <CircularProgress size={24} /> : "Submit"}
-        </button>
-      </form>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block loading={loading}>
+            {loading ? "Submitting..." : "Submit"}
+          </Button>
+        </Form.Item>
+      </Form>
 
-      {/* Snackbar for displaying success or error messages */}
+      {/* Snackbar for feedback messages */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
+        onClose={() => setSnackbarOpen(false)}
       >
         <Alert
-          onClose={handleCloseSnackbar}
+          onClose={() => setSnackbarOpen(false)}
           severity={snackbarSeverity}
           sx={{ width: "100%" }}
         >

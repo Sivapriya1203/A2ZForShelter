@@ -1,21 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  Form,
+  Input,
+  Select,
+  Button,
+  Upload,
+  Typography,
+  Modal,
+  Row,
+  Col,
+} from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import axios from "axios";
-import "../SalePost.css";
-import config from "../../../config";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
+import config from "../../../config";
+import "../SalePost.css"; // Custom CSS
+
+const { Title } = Typography;
+const { Option } = Select;
 
 const Pipe_wires = () => {
-  const userId = localStorage.getItem('userId');
-  console.log(userId);
+  const [form] = Form.useForm();
 
   const [formData, setFormData] = useState({
-    userId,
+    userId: "",
     name: "",
     email: "",
     phoneNumber: "",
     sellerAddress: "",
-    Type: "Pipes",
+    Type: "Pipes", // Default Type
     pipeType: "Metalic Pipe",
     pipeBrand: "",
     pipeDiameter: "",
@@ -30,44 +44,86 @@ const Pipe_wires = () => {
     description: "",
   });
 
+  const [fileList, setFileList] = useState([]);
+  const [previewImage, setPreviewImage] = useState("");
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewTitle, setPreviewTitle] = useState("");
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // or 'error'
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  useEffect(() => {
+    const authToken = localStorage.getItem("authToken");
+
+    if (authToken) {
+      axios
+        .get(`${config.apiURL}/api/getprofile`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        })
+        .then((response) => {
+          const { username, email, phoneNumber, _id } = response.data;
+          // Update form data
+          setFormData((prevData) => ({
+            ...prevData,
+            userId: _id,
+            name: username,
+            email,
+            phoneNumber,
+          }));
+          // Set values in the form inputs
+          form.setFieldsValue({
+            name: username,
+            email,
+            phoneNumber,
+          });
+        })
+        .catch((error) => {
+          console.error("Error fetching user data:", error);
+        });
+    }
+  }, [form]);
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  const handleChange = (changedValues) => {
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      ...changedValues,
     }));
   };
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
+  const handleUploadChange = ({ fileList }) => {
+    setFileList(fileList);
     setFormData((prevData) => ({
       ...prevData,
-      images: [...prevData.images, ...files],
+      images: fileList.map((file) => file.originFileObj),
     }));
   };
 
-  const handleRemoveImage = (index) => {
-    setFormData((prevData) => {
-      const newImages = prevData.images.filter((_, i) => i !== index);
-      return {
-        ...prevData,
-        images: newImages,
-      };
-    });
+  const handlePreview = async (file) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
+    }
+
+    setPreviewImage(file.url || file.preview);
+    setPreviewVisible(true);
+    setPreviewTitle(
+      file.name || file.url.substring(file.url.lastIndexOf("/") + 1)
+    );
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     let updatedPipeDiameter = formData.pipeDiameter;
     let updatedPipeLength = formData.pipeLength;
     let updatedWireDiameter = formData.wireDiameter;
     let updatedWireLength = formData.wireLength;
 
+    // Ensure proper units
     if (!updatedPipeDiameter.endsWith("Inch")) {
       formData.pipeDiameter = `${updatedPipeDiameter} Inch`;
     }
@@ -84,7 +140,7 @@ const Pipe_wires = () => {
     const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === "images") {
-        formData[key].forEach((file) => {
+        formData.images.forEach((file) => {
           formDataToSend.append("images", file);
         });
       } else {
@@ -93,15 +149,23 @@ const Pipe_wires = () => {
     });
 
     try {
-      const response = await axios.post(`${config.apiURL}/pipeWiresRoute/pipewires`, formDataToSend, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.post(
+        `${config.apiURL}/pipeWiresRoute/pipewires`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
       setSnackbarMessage("Form submitted successfully!");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
+
+      // Reset the form after submission
       setFormData({
+        userId,
         name: "",
         email: "",
         phoneNumber: "",
@@ -119,288 +183,321 @@ const Pipe_wires = () => {
         price: "",
         images: [],
         description: "",
-      })
-      console.log("Form submitted successfully", response.data);
-      
+      });
+      setFileList([]);
     } catch (error) {
       setSnackbarMessage("Error submitting form.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
-      console.error("Error submitting form:", error);
     }
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  const getBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+
+  const inputStyle = { height: "50px" }; // Adjust the height for input fields
 
   return (
-    <div className="container">
-      <h2>Pipe & Wire Seller</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>
-            Name: <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Email ID: <span className="required">*</span>
-          </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Phone Number: <span className="required">*</span>
-          </label>
-          <input
-            type="tel"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Seller Address: <span className="required">*</span>
-          </label>
-          <textarea
-            name="sellerAddress"
-            value={formData.sellerAddress}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Type: <span className="required">*</span>
-          </label>
-          <select
-            name="Type"
-            value={formData.Type}
-            onChange={handleChange}
-            required
-          >
-            {["Pipes", "Wires"].map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
+    <div
+      className="container"
+      style={{ width: "80%", maxWidth: "1200px", margin: "0 auto" }}
+    >
+      <Title
+        level={1}
+        style={{ textAlign: "center", marginBottom: "20px", fontWeight: "700" }}
+      >
+        Pipe & Wire Seller
+      </Title>
+
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        onValuesChange={handleChange}
+        initialValues={formData}
+      >
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Name"
+              name="name"
+              rules={[{ required: true, message: "Please input your name!" }]}
+            >
+              <Input style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Email ID"
+              name="email"
+              rules={[{ required: true, message: "Please input your email!" }]}
+            >
+              <Input type="email" style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Phone Number"
+              name="phoneNumber"
+              rules={[
+                { required: true, message: "Please input your phone number!" },
+              ]}
+            >
+              <Input type="tel" style={inputStyle} readOnly />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Seller Address"
+              name="sellerAddress"
+              rules={[
+                { required: true, message: "Please input your address!" },
+              ]}
+            >
+              <Input.TextArea style={inputStyle} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Type"
+              name="Type"
+              rules={[{ required: true, message: "Please select the type!" }]}
+            >
+              <Select
+                value={formData.Type}
+                onChange={(value) => handleChange({ Type: value })}
+                style={inputStyle}
+              >
+                {["Pipes", "Wires"].map((type) => (
+                  <Option key={type} value={type}>
+                    {type}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
 
         {/* Conditional Section: Pipes */}
         {formData.Type === "Pipes" && (
           <>
-            <div className="form-group">
-              <label>
-                Pipe Type: <span className="required">*</span>
-              </label>
-              <select
-                name="pipeType"
-                value={formData.pipeType}
-                onChange={handleChange}
-                required
-              >
-                {["Metalic Pipe", "Wiring Pipe", "Plumbing Pipe"].map(
-                  (pipeType) => (
-                    <option key={pipeType} value={pipeType}>
-                      {pipeType}
-                    </option>
-                  )
-                )}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>
-                Pipe Brand: <span className="required">*</span>
-              </label>
-              <input
-                type="text"
-                name="pipeBrand"
-                value={formData.pipeBrand}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>
-                Pipe Diameter: /Inch <span className="required">*</span>
-              </label>
-              <input
-                type="number"
-                name="pipeDiameter"
-                value={formData.pipeDiameter}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>
-                Pipe Length: /Meter <span className="required">*</span>
-              </label>
-              <input
-                type="number"
-                name="pipeLength"
-                value={formData.pipeLength}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Pipe Type"
+                  name="pipeType"
+                  rules={[
+                    { required: true, message: "Please select the pipe type!" },
+                  ]}
+                >
+                  <Select
+                    value={formData.pipeType}
+                    onChange={(value) => handleChange({ pipeType: value })}
+                    style={inputStyle}
+                  >
+                    {["Metalic Pipe", "Wiring Pipe", "Plumbing Pipe"].map(
+                      (type) => (
+                        <Option key={type} value={type}>
+                          {type}
+                        </Option>
+                      )
+                    )}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Pipe Brand"
+                  name="pipeBrand"
+                  rules={[
+                    { required: true, message: "Please input the pipe brand!" },
+                  ]}
+                >
+                  <Input style={inputStyle} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Pipe Diameter (Inch)"
+                  name="pipeDiameter"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the pipe diameter!",
+                    },
+                  ]}
+                >
+                  <Input type="number" style={inputStyle} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Pipe Length (Meter)"
+                  name="pipeLength"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the pipe length!",
+                    },
+                  ]}
+                >
+                  <Input type="number" style={inputStyle} />
+                </Form.Item>
+              </Col>
+            </Row>
           </>
         )}
 
         {/* Conditional Section: Wires */}
         {formData.Type === "Wires" && (
           <>
-            <div className="form-group">
-              <label>
-                Wire Type: <span className="required">*</span>
-              </label>
-              <select
-                name="wireType"
-                value={formData.wireType}
-                onChange={handleChange}
-                required
-              >
-                {[
-                  "Electrical Wire",
-                  "NM Cable",
-                  "UF Cable",
-                  "THHN/THWN Wire",
-                  "Low-Voltage Wire",
-                  "Phone and Data Wire",
-                  "Coaxial Cable",
-                  "Speaker Wire",
-                  "Armored Cable",
-                ].map((wireType) => (
-                  <option key={wireType} value={wireType}>
-                    {wireType}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>
-                Wire Brand: <span className="required">*</span>
-              </label>
-              <input
-                type="text"
-                name="wireBrand"
-                value={formData.wireBrand}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>
-                Wire Diameter: /mm <span className="required">*</span>
-              </label>
-              <input
-                type="number"
-                name="wireDiameter"
-                value={formData.wireDiameter}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>
-                Wire Length: /Meter <span className="required">*</span>
-              </label>
-              <input
-                type="number"
-                name="wireLength"
-                value={formData.wireLength}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Wire Type"
+                  name="wireType"
+                  rules={[
+                    { required: true, message: "Please select the wire type!" },
+                  ]}
+                >
+                  <Select
+                    value={formData.wireType}
+                    onChange={(value) => handleChange({ wireType: value })}
+                    style={inputStyle}
+                  >
+                    {[
+                      "Electrical Wire",
+                      "NM Cable",
+                      "UF Cable",
+                      "THHN/THWN Wire",
+                      "Low-Voltage Wire",
+                      "Phone and Data Wire",
+                      "Coaxial Cable",
+                      "Speaker Wire",
+                      "Armored Cable",
+                    ].map((type) => (
+                      <Option key={type} value={type}>
+                        {type}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Wire Brand"
+                  name="wireBrand"
+                  rules={[
+                    { required: true, message: "Please input the wire brand!" },
+                  ]}
+                >
+                  <Input style={inputStyle} />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Wire Diameter (mm)"
+                  name="wireDiameter"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the wire diameter!",
+                    },
+                  ]}
+                >
+                  <Input type="number" style={inputStyle} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Wire Length (Meter)"
+                  name="wireLength"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input the wire length!",
+                    },
+                  ]}
+                >
+                  <Input type="number" style={inputStyle} />
+                </Form.Item>
+              </Col>
+            </Row>
           </>
         )}
 
-        <div className="form-group">
-          <label>Quantity:</label>
-          <input
-            type="text"
-            name="quantity"
-            value={formData.quantity}
-            readOnly
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Price: <span className="required">*</span>
-          </label>
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            Upload Images: <span className="required">*</span>
-          </label>
-          <input
-            type="file"
-            name="images"
-            accept="image/*"
-            onChange={handleImageChange}
+        <Form.Item
+          label="Price"
+          name="price"
+          rules={[{ required: true, message: "Please input the price!" }]}
+        >
+          <Input type="number" min={1} style={inputStyle} />
+        </Form.Item>
+
+        <Form.Item
+          label="Upload Images"
+          rules={[
+            { required: true, message: "Please upload at least one image!" },
+          ]}
+        >
+          <Upload
+            listType="picture-card"
+            fileList={fileList}
+            onChange={handleUploadChange}
+            onPreview={handlePreview}
+            beforeUpload={() => false}
             multiple
-          />
-        </div>
-        <div className="image-preview">
-          {formData.images.map((image, index) => (
-            <div key={index} className="image-container">
-              <img
-                src={URL.createObjectURL(image)}
-                alt={`Preview ${index}`}
-                className="image-preview-item"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(index)}
-                className="remove-image-button"
-              >
-                X
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className="form-group">
-          <label>
-            Description: <span className="required">*</span>
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <button type="submit">Submit</button>
-        </div>
-      </form>
-       {/* Snackbar for feedback */}
-       <Snackbar
+          >
+            {fileList.length >= 8 ? null : (
+              <Button icon={<UploadOutlined />}>Upload</Button>
+            )}
+          </Upload>
+        </Form.Item>
+
+        <Form.Item
+          label="Description"
+          name="description"
+          rules={[{ required: true, message: "Please provide a description!" }]}
+        >
+          <Input.TextArea style={inputStyle} />
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="primary" htmlType="submit" block>
+            Submit
+          </Button>
+        </Form.Item>
+      </Form>
+
+      {/* Modal for Image Preview */}
+      <Modal
+        open={previewVisible}
+        title={previewTitle}
+        footer={null}
+        onCancel={() => setPreviewVisible(false)}
+      >
+        <img alt="preview" style={{ width: "100%" }} src={previewImage} />
+      </Modal>
+
+      {/* Snackbar for feedback */}
+      <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
