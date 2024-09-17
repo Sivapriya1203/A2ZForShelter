@@ -4,8 +4,8 @@ import Home from "../Components/Home/HomePage";
 import LoginRegister from "../Components/Pages/LoginRegister";
 import Profile from "../Components/Pages/profile";
 // import MapComponent from "../Components/Menu";
-import House3DView from "../Components/HouseBuilding/House";
-import House2D from "../Components/HouseBuilding/House2D";
+// import House3DView from "../Components/HouseBuilding/House";
+// import House2D from "../Components/HouseBuilding/House2D";
 import SaleProperty from "../Components/SellingDetails/SaleProperty";
 import PostHouse from "../Components/SellingDetails/House/PostHouse";
 import AdList from "../Components/SellingDetails/House/Houses";
@@ -65,9 +65,19 @@ import CategorySandall from "../Components/Categoryitemall/sandcategory";
 import CategorySteelall from "../Components/Categoryitemall/steelcategory";
 import CategoryStoneall from "../Components/Categoryitemall/stonecategory";
 import SellerInteriorView from "../Components/SellingDetails/SellerViewDetails/InteriorDetails";
-import Create2D from "../Components/HouseBuilding/2DCreate/2DCreate";
+
+//Intrest routes
+import SBILoanCalculator from "../Components/LoanCals/sbiloan";
+import HDFCLoanCalculator from "../Components/LoanCals/hdfccal";
+import KotakLoanCalculator from "../Components/LoanCals/kotakcal";
+import LandTLoanCalculator from "../Components/LoanCals/landtcal";
+import AxisLoanCalculator from "../Components/LoanCals/axiscal";
+import BajajLoanCalculator from "../Components/LoanCals/bajajcal";
+
+// import Create2D from "../Components/HouseBuilding/2DCreate/2DCreate";
 import Loanpost from "../Components/SellingDetails/Loan/Loandealer";
 import LandForm from "../Components/SellingDetails/land/land";
+// import Main3D from "../Components/New3DDesign/Main3Dand2d";
 
 function MainRoutes() {
   return (
@@ -77,8 +87,8 @@ function MainRoutes() {
       <Route path="/profile" element={<Profile />} />
 
       {/* <Route path="/menu" element={<MapComponent />} /> */}
-      <Route path="/2dView" element={<Create2D />} />
-      <Route path="/house3d" element={<House3DView />} />
+      {/* <Route path="/2dView" element={<Create2D />} /> */}
+      {/* <Route path="/house3d" element={<House3DView />} /> */}
       <Route path="/post" element={<SaleProperty />} />
       <Route path="/posthouse" element={<PostHouse />} />
       <Route path="/pgHostel" element={<Pgpost />} />
@@ -145,6 +155,17 @@ function MainRoutes() {
       <Route path="/Sellersteelview/:id" element={<SellerSteelView />} />
       <Route path="/Sellerstoneview/:id" element={<SellerStoneView />} />
       <Route path="/Sellerwoodview/:id" element={<SellerWoodView />} />
+
+      {/* intrest route */}
+      <Route path="/sbihomeloan" element={<SBILoanCalculator />} />
+      <Route path="/hdfchomeloan" element={<HDFCLoanCalculator />} />
+      <Route path="/kotakhomeloan" element={<KotakLoanCalculator />} />
+      <Route path="/landthomeloan" element={<LandTLoanCalculator />} />
+      <Route path="/axishomeloan" element={<AxisLoanCalculator />} />
+      <Route path="/bajajhomeloan" element={<BajajLoanCalculator />} />
+
+      {/* ================================================ */}
+      {/* <Route path="/Main3D" element={<Main3D />} /> */}
     </Routes>
   );
 }
