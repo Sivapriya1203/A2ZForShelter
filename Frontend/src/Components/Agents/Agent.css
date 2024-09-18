@@ -1,0 +1,84 @@
+/* Styles for the form */
+.registration-form {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .registration-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .registration-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .registration-form input,
+  .registration-form textarea {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  
+  .registration-form input[type="file"] {
+    padding: 5px;
+    font-size: 14px;
+  }
+  
+  .registration-form .name-fields {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .registration-form .name-fields input {
+    width: calc(50% - 5px);
+  }
+  
+  .registration-form textarea {
+    height: 100px;
+    resize: none;
+  }
+  
+  .registration-form button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .registration-form button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Media queries for responsiveness */
+  @media (max-width: 768px) {
+    .registration-form {
+      padding: 15px;
+    }
+  
+    .registration-form .name-fields {
+      flex-direction: column;
+    }
+  
+    .registration-form .name-fields input {
+      width: 100%;
+    }
+  }

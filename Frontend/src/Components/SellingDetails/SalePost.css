@@ -1,0 +1,147 @@
+/* Main Container */
+.container {
+  max-width: 100px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-top: 30px;
+  background-color: #ffffff; /* Clean white background */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slight shadow for depth */
+  transition: box-shadow 0.3s ease;
+}
+
+/* Hover effect on container */
+.container:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Enhance shadow on hover */
+}
+
+/* Typography */
+h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #ad0909;
+}
+
+/* Ant Design overrides */
+.ant-form-item-label > label {
+  font-weight: bold;
+  color: #555;
+}
+
+/* Form item enhancements */
+.ant-form-item {
+  margin-bottom: 16px;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover effect for form items */
+.ant-form-item:hover {
+  background-color: #f5f5f5; /* Light gray background on hover */
+}
+
+/* Input and Textarea enhancements */
+.ant-input,
+.ant-select-selector,
+.ant-textarea {
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Focus state for inputs */
+.ant-input:focus,
+.ant-select-selector:focus,
+.ant-textarea:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 5px rgba(24, 144, 255, 0.5); /* Light blue glow */
+}
+
+/* Button enhancements */
+.ant-btn-primary {
+  background-color: #4caf50;
+  border-color: #4caf50;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover effect for submit button */
+.ant-btn-primary:hover {
+  background-color: #45a049;
+  transform: scale(1.02);
+}
+
+/* Image Preview Container */
+.image-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Individual Image Container */
+.image-container {
+  position: relative;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.image-container:hover {
+  transform: scale(1.05);
+}
+
+/* Image Preview */
+.image-preview-item {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  transition: border-color 0.3s ease;
+}
+
+/* Border color change on hover */
+.image-preview-item:hover {
+  border-color: #4caf50;
+}
+
+/* Remove Image Button */
+.remove-image-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+/* Darker red on hover for remove button */
+.remove-image-button:hover {
+  background-color: darkred;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+    margin-top: 20px;
+  }
+
+  .ant-btn {
+    width: 100%; /* Make buttons full width on smaller screens */
+  }
+
+  .image-preview-item {
+    width: 80px;
+    height: 80px;
+  }
+}

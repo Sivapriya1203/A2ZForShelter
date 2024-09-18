@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+
+.full-container {
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background: hsla(0, 100%, 88%, 1);
+  background-image:
+    radial-gradient(at 80% 0%, hsla(189, 100%, 56%, 1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(355, 100%, 93%, 1) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsla(340, 100%, 76%, 1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(269, 100%, 77%, 1) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, hsla(343, 100%, 76%, 1) 0px, transparent 50%);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 800px; 
+  width: 100%;
+}
+
+.heading {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 2em;
+  color: #06160f;
+  z-index: 10;
+}
+
+.login-form{
+  height: 40%;
+  width: 25%;
+  padding: 20px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+h2 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  color: #06160f;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.input-group input,
+.input-group select,
+.input-group textarea {
+  width: 100%;
+  padding: 10px;
+  padding-left: 40px; /* Ensure padding accommodates the icon */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.input-group i {
+  position: absolute;
+  left: 10px; /* Adjust if necessary */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2em;
+  color: #888;
+}
+
+button {
+  background: #06160f;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #333;
+}
+
+.switch-link {
+  margin-top: 10px;
+}
+
+.switch-link a {
+  color: #06160f;
+  text-decoration: none;
+}
+
+.switch-link a:hover {
+  text-decoration: underline;
+}
+.register-form {
+  height: 80%; 
+  width: 40%; 
+  padding: 20px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin-top: 50px;
+}
+
+.input-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.input-row .input-group {
+  width: 48%; 
+}
+
+.input-row .input-group + .input-group {
+  margin-left: 4%; 
+}
+
+textarea {
+  width: 100%;
+  resize: vertical; 
+}
+
+.checkbox-group {
+  margin-bottom: 20px;
+}
+
+.switch-link {
+  margin-top: 10px;
+}
+
+.profile-image-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.profile-image-input {
+  display: none;
+}
+
+.profile-image-label {
+  cursor: pointer;
+}
+
+.profile-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+}
+
+@media (max-width: 767px) {
+  .heading {
+    font-size: 1.5em;
+    top: 10px;
+    left: 10px;
+  }
+
+  .login-form {
+    width: 90%;
+    height: auto;
+    margin-top: 130px;
+    padding: 15px;
+  }
+  .register-form{
+    width: 90%;
+    height: auto;
+    margin-top: 80px;
+    padding: 15px;
+  }
+  .login-form {
+    height: auto;
+  }
+
+  .register-form {
+    height: auto;
+  }
+
+  .input-row {
+    flex-direction: column;
+  }
+
+  .input-row .input-group {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .input-row .input-group + .input-group {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  .checkbox-group {
+    margin-bottom: 15px;
+  }
+
+  button {
+    padding: 12px 24px;
+    font-size: 1em;
+  }
+}
